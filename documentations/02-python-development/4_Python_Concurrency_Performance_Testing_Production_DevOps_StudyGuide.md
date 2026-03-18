@@ -2219,7 +2219,7 @@ settings = EnvSpecificSettings()
 **1. Secrets Never in Code**
 ```python
 # ❌ BAD: Secrets in code (will be committed to git!)
-AWS_SECRET_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY = "TEST-SECRET-KEY-12345"
 
 # ✅ GOOD: Secrets from environment or secrets manager
 import keyring
