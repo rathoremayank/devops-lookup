@@ -13,11 +13,6 @@ output "public_subnet_ids" {
   value       = module.networking.public_subnet_ids
 }
 
-output "private_subnet_ids" {
-  description = "Private subnet IDs"
-  value       = module.networking.private_subnet_ids
-}
-
 output "master_instance_id" {
   description = "Kubernetes master instance ID"
   value       = module.master_instance.instance_id
@@ -66,11 +61,6 @@ output "master_security_group_id" {
 output "worker_security_group_id" {
   description = "Worker security group ID"
   value       = module.networking.worker_security_group_id
-}
-
-output "nat_gateway_ips" {
-  description = "NAT Gateway Elastic IPs"
-  value       = module.networking.nat_gateway_ips
 }
 
 output "kubernetes_version" {

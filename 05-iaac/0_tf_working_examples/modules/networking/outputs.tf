@@ -13,11 +13,6 @@ output "public_subnet_ids" {
   value       = aws_subnet.public[*].id
 }
 
-output "private_subnet_ids" {
-  description = "List of private subnet IDs"
-  value       = aws_subnet.private[*].id
-}
-
 output "master_security_group_id" {
   description = "Security group ID for Kubernetes master"
   value       = aws_security_group.master.id
@@ -33,7 +28,3 @@ output "internet_gateway_id" {
   value       = aws_internet_gateway.main.id
 }
 
-output "nat_gateway_ips" {
-  description = "List of NAT Gateway Elastic IPs"
-  value       = aws_eip.nat[*].public_ip
-}

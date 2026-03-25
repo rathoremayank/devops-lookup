@@ -42,14 +42,13 @@ data "aws_ami" "ubuntu" {
 module "networking" {
   source = "../../modules/networking"
 
-  vpc_cidr              = var.vpc_cidr
-  public_subnet_cidrs   = var.public_subnet_cidrs
-  private_subnet_cidrs  = var.private_subnet_cidrs
-  availability_zones    = local.availability_zones
-  environment           = var.environment
-  project_name          = var.project_name
-  aws_region            = var.aws_region
-  tags                  = local.common_tags
+  vpc_cidr            = var.vpc_cidr
+  public_subnet_cidrs = var.public_subnet_cidrs
+  availability_zones  = local.availability_zones
+  environment         = var.environment
+  project_name        = var.project_name
+  aws_region          = var.aws_region
+  tags                = local.common_tags
 }
 
 # Kubernetes Master Module (for user data generation)
@@ -99,7 +98,7 @@ module "worker_instance" {
   instance_name      = "${var.project_name}-worker-1"
   instance_type      = var.worker_instance_type
   ami_id             = data.aws_ami.ubuntu.id
-  subnet_id          = module.networking.private_subnet_ids[0]
+  subnet_id          = module.networking.public_subnet_ids[1]
   security_group_id  = module.networking.worker_security_group_id
   key_pair_name      = var.ec2_key_pair_name
   user_data          = module.k8s_worker.user_data_script
