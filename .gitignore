@@ -1,0 +1,191 @@
+# ============================================================================
+# IDE and Editor Files
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+*.iml
+
+# ============================================================================
+# Terraform Files
+# ============================================================================
+**/.terraform/*
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.terraform.tfvars
+.terraform.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# ============================================================================
+# Python Files
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.tox/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.hypothesis/
+
+# ============================================================================
+# AWS and Cloud Files
+# ============================================================================
+*.pem
+*.pub
+*.key
+*.jks
+.aws/
+.aws-cli/
+aws-exports.json
+aws-resources.txt
+amplify/.config/
+amplify/.\#current-cloud-backend
+amplify/backend/.temp
+node_modules/
+
+# ============================================================================
+# SSH and Security Files
+# ============================================================================
+.ssh/
+known_hosts
+authorized_keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# ============================================================================
+# OS and System Files
+# ============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*~
+.directory
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+
+# ============================================================================
+# Log Files
+# ============================================================================
+*.log
+*.log*
+logs/
+*.out
+
+# ============================================================================
+# Temporary and Cache Files
+# ============================================================================
+*.tmp
+*.temp
+*.cache
+.cache/
+tmp/
+temp/
+*.bak
+*.backup
+*.orig
+
+# ============================================================================
+# Docker and Container Files
+# ============================================================================
+docker-compose.override.yml
+.dockerignore
+docker.env
+
+# ============================================================================
+# Git Related
+# ============================================================================
+.git/
+.gitkeep
+*.patch
+
+# ============================================================================
+# Dependencies and Packages
+# ============================================================================
+node_modules/
+*.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+composer.lock
+
+# ============================================================================
+# Build Artifacts
+# ============================================================================
+dist/
+build/
+*.whl
+**/*.egg-info/
+
+# ============================================================================
+# Local Configuration Files (Secrets)
+# ============================================================================
+.env
+.env.local
+.env.*.local
+terraform.tfvars
+terraform.tfvars.json
+!example.tfvars
+*.local.json
+config.local.*
+settings.local.*
+
+# ============================================================================
+# IDE Specific - Keep these at end for safety
+# ============================================================================
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+**/._*

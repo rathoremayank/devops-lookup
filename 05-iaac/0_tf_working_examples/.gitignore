@@ -1,0 +1,42 @@
+# NOTE: Most patterns are defined in the root .gitignore
+# This file contains Terraform-specific overrides
+
+# Terraform local files
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+
+# Terraform variable files (keep example.tfvars)
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# Backend configuration files (keep templates)
+# Don't commit actual backend configs with real bucket names
+environments/*/*.tfbackend
+!environments/*/backend-*.tfbackend.example
+# But we DO want to keep the templates for reference
+!environments/dev/backend-dev.tfbackend
+!environments/prod/backend-prod.tfbackend
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Terraform overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration
+.terraformrc
+terraform.rc
+
+# Keep module sources committed
+!modules/
+
+# Terraform lock file - UNCOMMITTED by default
+# Uncomment the line below to commit lock file for consistency
+# !.terraform.lock.hcl
