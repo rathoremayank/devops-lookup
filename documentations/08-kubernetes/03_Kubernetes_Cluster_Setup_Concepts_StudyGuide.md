@@ -886,7 +886,7 @@ if ! command -v kubeadm &> /dev/null; then
   curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg \
     https://dl.k8s.io/apt/doc/apt-key.gpg
   
-  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" \
+  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://packages.cloud.google.com/apt kubernetes-focal main" \
     | tee /etc/apt/sources.list.d/kubernetes.list
   
   KUBE_VERSION=$(echo $KUBERNETES_VERSION | sed 's/^v//')
@@ -1086,8 +1086,8 @@ Resources:
           
           # Install Kubernetes components
           apt-get install -y apt-transport-https ca-certificates curl
-          curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
-          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+          curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://packages.cloud.google.com/apt kubernetes-focal main" | tee /etc/apt/sources.list.d/kubernetes.list
           apt-get update
           
           KUBE_VERSION=$(echo '${KubernetesVersion}' | sed 's/^v//')
@@ -1169,8 +1169,8 @@ log "[Phase 3] Install kubeadm and kubelet"
 if ! command -v kubeadm &> /dev/null; then
   apt-get update
   apt-get install -y apt-transport-https ca-certificates curl
-  curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
-  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+  curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://packages.cloud.google.com/apt kubernetes-focal main" | tee /etc/apt/sources.list.d/kubernetes.list
   apt-get update
   apt-get install -y kubelet kubeadm
 fi

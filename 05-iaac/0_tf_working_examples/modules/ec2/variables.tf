@@ -40,6 +40,12 @@ variable "root_volume_size" {
   default     = 30
 }
 
+variable "iam_instance_profile" {
+  description = "IAM instance profile name to attach to the EC2 instance"
+  type        = string
+  default     = ""
+}
+
 variable "environment" {
   description = "Environment name"
   type        = string

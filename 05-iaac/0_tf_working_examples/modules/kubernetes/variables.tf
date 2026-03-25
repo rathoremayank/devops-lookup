@@ -42,6 +42,12 @@ variable "service_subnet" {
   default     = "10.96.0.0/12"
 }
 
+variable "ssm_parameter_name" {
+  description = "AWS SSM Parameter Store name for kubeadm join command"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Common tags for all resources"
   type        = map(string)
