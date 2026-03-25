@@ -194,23 +194,3 @@ resource "aws_security_group" "worker" {
   )
 }
 
-# Allow communication between master and worker
-resource "aws_security_group_rule" "master_to_worker" {
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 65535
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.master.id
-  security_group_id        = aws_security_group.worker.id
-  description              = "All TCP from master"
-}
-
-resource "aws_security_group_rule" "worker_to_master" {
-  type                     = "ingress"
-  from_port                = 0
-  to_port                  = 65535
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.worker.id
-  security_group_id        = aws_security_group.master.id
-  description              = "All TCP from worker"
-}
