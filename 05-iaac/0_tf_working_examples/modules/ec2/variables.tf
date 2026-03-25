@@ -37,7 +37,7 @@ variable "user_data" {
 variable "root_volume_size" {
   description = "Root volume size in GB"
   type        = number
-  default     = 20
+  default     = 30
 }
 
 variable "environment" {

@@ -12,7 +12,7 @@ resource "aws_instance" "main" {
     encrypted             = true
   }
 
-  monitoring = false
+  monitoring = true
 
   user_data = base64encode(var.user_data)
 
