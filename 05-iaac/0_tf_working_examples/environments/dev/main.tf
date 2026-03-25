@@ -73,7 +73,7 @@ module "master_instance" {
   security_group_id  = module.networking.master_security_group_id
   key_pair_name      = var.ec2_key_pair_name
   user_data          = module.k8s_master.user_data_script
-  root_volume_size   = 50
+  root_volume_size   = 10
   environment        = var.environment
   project_name       = var.project_name
   tags               = local.common_tags
@@ -102,7 +102,7 @@ module "worker_instance" {
   security_group_id  = module.networking.worker_security_group_id
   key_pair_name      = var.ec2_key_pair_name
   user_data          = module.k8s_worker.user_data_script
-  root_volume_size   = 50
+  root_volume_size   = 10
   environment        = var.environment
   project_name       = var.project_name
   tags               = local.common_tags
