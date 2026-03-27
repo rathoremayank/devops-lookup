@@ -1,20 +1,22 @@
 #!/bin/bash
 set -x
 
-# Redirect output to log file for debugging
-exec > >(tee -a /var/log/k8s-master-init.log)
-exec 2>&1
+# Redirect output to log file for debugging (simple redirection for compatibility)
+LOG_FILE="/var/log/k8s-master-init.log"
+mkdir -p $(dirname $LOG_FILE)
+exec 1>> $LOG_FILE
+exec 2>> $LOG_FILE
 
 echo "Starting Kubernetes master initialization at $(date)"
 
-# Wait for system and kubelet to stabilize
+# Wait for system and kubelet to stabilize (shorter wait for t2.micro)
 echo "Waiting for system to stabilize..."
-sleep 60
+sleep 15
 
-# Verify kubelet is running
+# Verify kubelet is running (check both systemd and snap)
 echo "Checking if kubelet is running..."
 for i in {1..30}; do
-  if systemctl is-active --quiet kubelet; then
+  if systemctl is-active --quiet kubelet 2>/dev/null; then
     echo "Kubelet is running"
     break
   fi
@@ -22,61 +24,117 @@ for i in {1..30}; do
   sleep 2
 done
 
+# Additional check if systemd service exists
+if ! systemctl is-active --quiet kubelet 2>/dev/null; then
+  echo "ERROR: kubelet service is not running"
+  systemctl status kubelet || true
+  exit 1
+fi
+
+# Verify Docker or container runtime is running
+echo "Checking container runtime..."
+docker ps > /dev/null 2>&1 || {
+  echo "ERROR: Docker is not running or not available"
+  echo "Docker status:"
+  systemctl status docker || echo "Docker service not found"
+  echo "Available container runtimes:"
+  which docker containerd cri-o 2>/dev/null || echo "No container runtime found"
+  exit 1
+}
+
+# Verify swap is disabled
+echo "Checking swap status..."
+if [ $(swapon --show | wc -l) -gt 1 ]; then
+  echo "ERROR: Swap is still enabled. kubeadm requires swap to be disabled."
+  echo "Run: sudo swapoff -a"
+  exit 1
+fi
+echo "Swap is properly disabled"
+
 # Initialize Kubernetes master
 echo "Initializing Kubernetes cluster..."
+MASTER_IP=$(hostname -I | awk '{print $1}')
+echo "Using Master IP: $MASTER_IP"
+echo "Pod Network CIDR: ${pod_network_cidr}"
+echo "Service CIDR: ${service_subnet}"
+
 kubeadm init \
   --pod-network-cidr=${pod_network_cidr} \
   --service-cidr=${service_subnet} \
-  --apiserver-advertise-address=$(hostname -I | awk '{print $1}') \
-  --token-ttl=0 \
-  --log-dir=/var/log/kubernetes || {
+  --apiserver-advertise-address=$MASTER_IP \
+  --token-ttl=0 2>&1 | tee -a $LOG_FILE || {
   echo "ERROR: kubeadm init failed"
+  echo "Debugging info:"
+  echo "--- Kubelet status ---"
+  systemctl status kubelet || echo "Kubelet not running"
+  echo "--- Docker status ---"
+  docker ps || echo "Docker error"
+  echo "--- System info ---"
+  free -m
+  cat /proc/cmdline | grep -o 'cgroup[^ ]*' || echo "No cgroup info"
   exit 1
 }
 
 echo "Kubernetes cluster initialized successfully"
 
-# Setup kubeconfig
+# Setup kubeconfig immediately for root (cloud-init user) and ubuntu SSH user
 echo "Setting up kubeconfig..."
-mkdir -p $HOME/.kube
-cp /etc/kubernetes/admin.conf $HOME/.kube/config
-chown $(id -u):$(id -g) $HOME/.kube/config
 
+# Root kubeconfig (used during this script and by root user)
 mkdir -p /root/.kube
 cp /etc/kubernetes/admin.conf /root/.kube/config
+chmod 600 /root/.kube/config
+
+# Ubuntu user kubeconfig (for SSH login as ubuntu)
+if id ubuntu &>/dev/null; then
+  mkdir -p /home/ubuntu/.kube
+  cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+  chown ubuntu:ubuntu /home/ubuntu/.kube/config
+  chmod 600 /home/ubuntu/.kube/config
+fi
 
 # Copy kubeconfig to /tmp for easy access
 cp /etc/kubernetes/admin.conf /tmp/kubeconfig
 chmod 644 /tmp/kubeconfig
 
+# Set KUBECONFIG environment variable so kubectl uses the right credentials
+export KUBECONFIG=/root/.kube/config
+echo "KUBECONFIG is set to: $KUBECONFIG"
+echo "Testing kubeconfig access..."
+if kubectl config view --raw > /dev/null 2>&1; then
+  echo "kubeconfig is valid and accessible"
+else
+  echo "ERROR: kubeconfig is not valid"
+  ls -la /root/.kube/config
+  exit 1
+fi
+
 # Wait for API server to be ready
 echo "Waiting for Kubernetes API server to be ready..."
-export KUBECONFIG=/root/.kube/config
 for i in {1..60}; do
   if kubectl get nodes &>/dev/null; then
     echo "Kubernetes API server is ready"
     break
   fi
   echo "Waiting for API server... ($i/60)"
-  sleep 2
+  sleep 1
 done
 
-# Verify kubeadm is installed and kubectl works
+# Verify kubeadm worked
 echo "Verifying kubectl installation..."
 kubectl version --client
-kubectl cluster-info
-
-# Install CNI (Calico) - but don't fail if it doesn't work immediately
-echo "Installing Calico CNI..."
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml || {
-  echo "WARNING: Failed to apply Calico operator, retrying..."
-  sleep 10
-  kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml || true
+kubectl cluster-info || {
+  echo "WARNING: kubectl cluster-info failed but may still be initializing"
 }
 
-# Create Calico installation
-sleep 10
-cat <<'CALICO_EOF' | kubectl apply -f - || true
+# Install CNI (Calico) - skip if offline, just ensure cluster is ready
+echo "Installing Calico CNI (may fail if no internet)..."
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml 2>/dev/null || {
+  echo "WARNING: Calico CNI installation skipped (verify manually if needed)"
+}
+
+# Create Calico installation with optimized settings for t2.micro
+cat <<'CALICO_EOF' | kubectl apply -f - 2>/dev/null || true
 apiVersion: operator.tigera.io/v1
 kind: Installation
 metadata:
@@ -89,13 +147,33 @@ spec:
       encapsulation: VXLANCrossSubnet
       natOutgoing: Enabled
       nodeSelector: all()
+  nodeMetricsPort: 9091
+  typhaMetricsPort: 9093
 CALICO_EOF
 
 echo "Calico installation requested (may take time to be ready)"
 
 # Generate join token for workers
 echo "Generating worker join token..."
-TOKEN=$(kubeadm token create --ttl=24h)
+# Ensure API server is fully ready before generating token
+MAX_WAIT=60
+for attempt in $(seq 1 $MAX_WAIT); do
+  if kubectl api-versions &>/dev/null; then
+    echo "API server is fully ready for token generation"
+    break
+  fi
+  if [ $attempt -eq $MAX_WAIT ]; then
+    echo "WARNING: API server did not fully ready after $MAX_WAIT seconds, attempting token generation anyway"
+  fi
+  sleep 1
+done
+
+TOKEN=$(kubeadm token create --ttl=24h 2>&1) || {
+  echo "ERROR: Failed to create kubeadm token"
+  echo "Token creation output: $TOKEN"
+  exit 1
+}
+echo "Generated token: $TOKEN"
 
 # Store token and certificate hash for workers
 CERT_HASH=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt 2>/dev/null | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex 2>/dev/null | sed 's/^.* //')

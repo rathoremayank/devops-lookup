@@ -15,7 +15,8 @@ resource "aws_instance" "main" {
 
   monitoring = false
 
-  user_data = base64encode(var.user_data)
+  # Pass plain user_data script; AWS provider will base64-encode it for EC2
+  user_data = var.user_data
 
   tags = merge(
     var.tags,

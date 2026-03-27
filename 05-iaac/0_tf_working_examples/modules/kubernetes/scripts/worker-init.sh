@@ -1,9 +1,11 @@
 #!/bin/bash
 set -x
 
-# Redirect output to log file for debugging
-exec > >(tee -a /var/log/k8s-worker-init.log)
-exec 2>&1
+# Redirect output to log file for debugging (simple redirection for compatibility)
+LOG_FILE="/var/log/k8s-worker-init.log"
+mkdir -p $(dirname $LOG_FILE)
+exec 1>> $LOG_FILE
+exec 2>> $LOG_FILE
 
 echo "Starting Kubernetes worker node initialization at $(date)"
 
@@ -11,16 +13,25 @@ echo "Starting Kubernetes worker node initialization at $(date)"
 echo "Waiting for system to stabilize..."
 sleep 60
 
-# Verify kubelet is running
+# Verify kubelet is running (check systemd)
 echo "Checking if kubelet is running..."
 for i in {1..30}; do
-  if systemctl is-active --quiet kubelet; then
+  if systemctl is-active --quiet kubelet 2>/dev/null; then
     echo "Kubelet is running"
     break
   fi
   echo "Waiting for kubelet... ($i/30)"
   sleep 2
 done
+
+# Ensure kubelet is enabled to persist after reboot
+systemctl enable kubelet 2>/dev/null || true
+
+if ! systemctl is-active --quiet kubelet 2>/dev/null; then
+  echo "ERROR: kubelet service is not running"
+  systemctl status kubelet || true
+  exit 1
+fi
 
 # Wait for master to be ready
 echo "Attempting to connect to master at ${master_internal_ip}:6443..."

@@ -36,7 +36,7 @@ variable "ec2_key_pair_name" {
 variable "master_instance_type" {
   description = "EC2 instance type for Kubernetes master"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "worker_instance_type" {
